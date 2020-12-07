@@ -2,12 +2,11 @@ package me.tatarka.nav.sample
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import me.tatarka.nav.route.Route
+import me.tatarka.nav.router.Route
 
 sealed class Page : Parcelable {
     @Parcelize
     @Route("/search")
-    @Route("/search/.*")
     object Search : Page()
 
     @Parcelize

@@ -1,4 +1,4 @@
-package me.tatarka.route.nav
+package me.tatarka.router.nav
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
@@ -8,8 +8,8 @@ import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
-private val ROUTE = "me.tatarka.nav.route.Route"
-private val ROUTE_MATCHER = ClassName("me.tatarka.nav.route", "RouterMatcher")
+private val ROUTE = "me.tatarka.nav.router.Route"
+private val ROUTE_MATCHER = ClassName("me.tatarka.nav.router", "RouterMatcher")
 private val ROUTE_MATCHER_LIST = LIST.parameterizedBy(ROUTE_MATCHER)
 private val KCLASS = ClassName("kotlin.reflect", "KClass")
 private val URI = ClassName("android.net", "Uri")

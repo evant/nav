@@ -26,9 +26,15 @@ fun <T : Any> rememberBackStack(
     return savedInstanceState(inputs, saver = backStackSaver(saver)) { backStack() }.value
 }
 
+/**
+ * Creates a [BackStack] with the given starting page.
+ */
 fun <T : Any> backStackOf(startingPage: T): BackStack<T> =
     BackStack(mutableStateListOf(startingPage))
 
+/**
+ * Creates a [BackStack] with the given starting page and optional deep link page to show on top.
+ */
 fun <T : Any> backStackOf(startingPage: T, deepLink: T? = null): BackStack<T> =
     if (deepLink != startingPage) {
         BackStack(mutableStateListOf(startingPage))

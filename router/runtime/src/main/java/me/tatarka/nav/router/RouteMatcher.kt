@@ -1,4 +1,4 @@
-package me.tatarka.nav.route
+package me.tatarka.nav.router
 
 import android.net.Uri
 import java.util.regex.Matcher

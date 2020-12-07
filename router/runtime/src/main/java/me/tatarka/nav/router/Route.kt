@@ -1,4 +1,4 @@
-package me.tatarka.nav.route
+package me.tatarka.nav.router
 
 /**
  * Annotate variants of a sealed class with routes. This will generate a `parseRoute()` method that
