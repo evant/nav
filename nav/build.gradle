@@ -30,6 +30,8 @@ android {
 }
 
 dependencies {
+    api project(':router:runtime')
+
     implementation "androidx.compose.runtime:runtime:$compose_version"
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.runtime:runtime-saved-instance-state:$compose_version"

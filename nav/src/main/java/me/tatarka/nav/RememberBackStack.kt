@@ -1,13 +1,14 @@
 package me.tatarka.nav
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.savedinstancestate.Saver
 import androidx.compose.runtime.savedinstancestate.autoSaver
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.runtime.snapshots.SnapshotStateList
+
+
 
 /**
  * [remember] a [BackStack], saving it's pages instance state. If your pages are types that can be
@@ -26,22 +27,6 @@ fun <T : Any> rememberBackStack(
     return savedInstanceState(inputs, saver = backStackSaver(saver)) { backStack() }.value
 }
 
-/**
- * Creates a [BackStack] with the given starting page.
- */
-fun <T : Any> backStackOf(startingPage: T): BackStack<T> =
-    BackStack(mutableStateListOf(startingPage))
-
-/**
- * Creates a [BackStack] with the given starting page and optional deep link page to show on top.
- */
-fun <T : Any> backStackOf(startingPage: T, deepLink: T? = null): BackStack<T> =
-    if (deepLink != startingPage) {
-        BackStack(mutableStateListOf(startingPage))
-    } else {
-        BackStack(mutableStateListOf(startingPage, deepLink))
-    }
-
 private fun <T : Any> backStackSaver(saver: Saver<T, Any>): Saver<BackStack<T>, List<Any>> =
     Saver(
         save = { backStack -> backStack.pages.map { with(saver) { save(it)!! } } },
@@ -51,20 +36,3 @@ private fun <T : Any> backStackSaver(saver: Saver<T, Any>): Saver<BackStack<T>, 
             })
         }
     )
-
-/**
- * Navigator is a component that manages a stack of pages in your application. The current page of
- * the back stack will be shown, and the instance state of the other pages will be remembered.
- *
- * @param backStack The back stack, the top one will be shown.
- * @param content The page content. This will normally depend on the top page in the stack.
- */
-@Composable
-fun <T : Any> Navigator(
-    backStack: BackStack<T>,
-    content: @Composable () -> Unit
-) {
-    Navigator(pages = backStack.pages, onPopPage = { backStack.pop() }) {
-        content()
-    }
-}

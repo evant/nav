@@ -1,15 +1,38 @@
 package me.tatarka.nav
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+
+/**
+ * Creates a [BackStack] with the given starting page.
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T : Any> backStackOf(startingPage: T): BackStack<T> =
+    BackStack(mutableStateListOf(startingPage))
+
+/**
+ * Creates a [BackStack] with the given pages.
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T : Any> backStackOf(startingPage: T, vararg pages: T): BackStack<T> =
+    BackStack(SnapshotStateList<T>().apply {
+        add(startingPage)
+        addAll(pages)
+    })
+
 /**
  * An opinionated back stack implementation. This guarantees you always have a root page in your
  * stack and you can only push new items onto the stack and pop ones off.
  */
-inline class BackStack<T : Any>(private val _pages: MutableList<T>) {
+@Suppress("NON_PUBLIC_PRIMARY_CONSTRUCTOR_OF_INLINE_CLASS")
+inline class BackStack<T : Any> @PublishedApi internal constructor(
+    private val _pages: MutableList<T>
+) : NavigationStack<T> {
 
     /**
      * All the pages in the back stack.
      */
-    val pages: List<T> get() = _pages
+    override val pages: List<T> get() = _pages
 
     /**
      * The starting page. The is the bottom page on the stack and can never be removed.
@@ -73,7 +96,7 @@ inline class BackStack<T : Any>(private val _pages: MutableList<T>) {
      *
      * @return true if the back stack was changed, false otherwise.
      */
-    fun pop(): Boolean {
+    override fun pop(): Boolean {
         return if (_pages.size > 1) {
             _pages.removeLast()
             true

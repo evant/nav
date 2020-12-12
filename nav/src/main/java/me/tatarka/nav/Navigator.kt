@@ -8,9 +8,16 @@ import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.compose.runtime.*
 import androidx.compose.runtime.savedinstancestate.ExperimentalRestorableStateHolder
 import androidx.compose.runtime.savedinstancestate.rememberRestorableStateHolder
-import androidx.compose.runtime.savedinstancestate.rememberSavedInstanceState
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.ui.platform.AmbientContext
+
+@Composable
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T : Any> Navigator(
+    stack: NavigationStack<T>,
+    noinline content: @Composable () -> Unit
+) {
+    Navigator(pages = stack.pages, onPopPage = { stack.pop() }, content = content)
+}
 
 /**
  * Navigator is a component that manages a stack of pages in your application. The top page of the
@@ -87,3 +94,9 @@ private val Context.onBackPressedDispatcher: OnBackPressedDispatcher
         is ContextWrapper -> baseContext.onBackPressedDispatcher
         else -> throw IllegalArgumentException("Expected context to be OnBackPressedDispatcherOwner, are you extending ComponentActivity?")
     }
+
+interface NavigationStack<T> {
+    val pages: List<T>
+
+    fun pop(): Boolean
+}

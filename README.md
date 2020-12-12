@@ -67,6 +67,6 @@ sealed class Page : Parcelable {
 }
 
 val backStack by rememberBackStack<Page>(deepLink) {
-    backStackOf(Page.List, Page::class.parseRoute(deepLink))
+    deepLink.toBackStack(Page.List)
 }
 ```

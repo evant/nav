@@ -17,11 +17,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import me.tatarka.nav.BackStack
-import me.tatarka.nav.Navigator
-import me.tatarka.nav.backStackOf
-import me.tatarka.nav.rememberBackStack
-
+import me.tatarka.nav.*
+import me.tatarka.nav.router.toRoute
 
 data class NavItem(
     @DrawableRes
@@ -38,13 +35,14 @@ val BOTTOM_ITEMS = listOf(
 )
 
 @Composable
-fun App(deepLink: Uri = Uri.EMPTY) {
-
+fun App(deepLink: Uri? = null) {
     // The overall back stack
-    val backStack = rememberBackStack(deepLink) { backStackOf(Page.Home, Page::class.parseRoute(deepLink)) }
+    val backStack = rememberBackStack(deepLink) { deepLink.toBackStack<Page>(Page.Home) }
     // Page-specific back stacks
-    val searchBackStack = rememberBackStack(deepLink) { backStackOf(SearchPage.Main, SearchPage::class.parseRoute(deepLink)) }
-    val homeBackStack = rememberBackStack(deepLink) { backStackOf(HomePage.List, HomePage::class.parseRoute(deepLink)) }
+    val searchBackStack =
+        rememberBackStack(deepLink) { deepLink.toBackStack<SearchPage>(SearchPage.Main) }
+    val homeBackStack =
+        rememberBackStack(deepLink) { deepLink.toBackStack<HomePage>(HomePage.List) }
     val pageBackStacks = mapOf(Page.Search to searchBackStack, Page.Home to homeBackStack)
 
     Scaffold(
