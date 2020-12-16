@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.runtime.setValue
@@ -18,7 +19,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import me.tatarka.nav.*
-import me.tatarka.nav.router.toRoute
+import me.tatarka.nav.router.parseRoute
 
 data class NavItem(
     @DrawableRes
@@ -34,22 +35,28 @@ val BOTTOM_ITEMS = listOf(
     NavItem(icon = R.drawable.ic_settings, title = R.string.settings, page = Page.Settings)
 )
 
+class AppBackStack(
+    val primary: BackStack<Page>,
+    val search: BackStack<SearchPage>,
+    val home: BackStack<HomePage>,
+)
+
 @Composable
-fun App(deepLink: Uri? = null) {
+fun App(backStack: AppBackStack) {
     // The overall back stack
-    val backStack = rememberBackStack(deepLink) { deepLink.toBackStack<Page>(Page.Home) }
-    // Page-specific back stacks
-    val searchBackStack =
-        rememberBackStack(deepLink) { deepLink.toBackStack<SearchPage>(SearchPage.Main) }
-    val homeBackStack =
-        rememberBackStack(deepLink) { deepLink.toBackStack<HomePage>(HomePage.List) }
-    val pageBackStacks = mapOf(Page.Search to searchBackStack, Page.Home to homeBackStack)
+//    val backStack = rememberBackStack(deepLink) { backStackOf<Page>(parseRoute(deepLink)) }
+//    // Page-specific back stacks
+//    val searchBackStack =
+//        rememberBackStack(deepLink) { backStackOf<SearchPage>(parseRoute(deepLink)) }
+//    val homeBackStack =
+//        rememberBackStack(deepLink) { backStackOf<HomePage>(parseRoute(deepLink)) }
+    val pageBackStacks = mapOf(Page.Search to backStack.search, Page.Home to backStack.home)
 
     Scaffold(
         topBar = {
             TopAppBar(title = {
                 Text(
-                    text = when (backStack.current) {
+                    text = when (backStack.primary.current) {
                         Page.Search -> stringResource(R.string.search)
                         Page.Home -> stringResource(R.string.app_name)
                         Page.Settings -> stringResource(R.string.settings)
@@ -64,12 +71,12 @@ fun App(deepLink: Uri? = null) {
                     BottomNavigationItem(
                         icon = { Icon(imageVector = vectorResource(item.icon)) },
                         label = { Text(stringResource(item.title)) },
-                        selected = item.page == backStack.current,
+                        selected = item.page == backStack.primary.current,
                         onClick = {
-                            if (item.page == backStack.current) {
+                            if (item.page == backStack.primary.current) {
                                 pageBackStacks[item.page]?.popToRoot()
                             } else {
-                                backStack.navigate(
+                                backStack.primary.navigate(
                                     page = item.page,
                                     popUpTo = { it is Page.Home },
                                     singleTop = true,
@@ -79,14 +86,14 @@ fun App(deepLink: Uri? = null) {
                 }
             }
         }) { padding ->
-        Navigator(backStack) {
+        Navigator(backStack.primary) {
             Box(Modifier.padding(padding)) {
-                when (backStack.current) {
+                when (backStack.primary.current) {
                     Page.Search -> {
-                        Search(searchBackStack)
+                        Search(backStack.search)
                     }
                     Page.Home -> {
-                        Home(homeBackStack)
+                        Home(backStack.home)
                     }
                     Page.Settings -> {
                         Settings()

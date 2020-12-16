@@ -9,6 +9,13 @@ android {
         minSdkVersion 21
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerVersion kotlin_version
+        kotlinCompilerExtensionVersion compose_version
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -29,6 +36,10 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.2.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2"
+    implementation "androidx.activity:activity-ktx:1.1.0"
+
+    implementation "androidx.compose.runtime:runtime:$compose_version"
 
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.robolectric:robolectric:4.4'
@@ -40,6 +51,6 @@ dependencies {
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs += ["-Xinline-classes"]
+        freeCompilerArgs += ["-Xallow-jvm-ir-dependencies", "-Xskip-prerelease-check", "-Xinline-classes"]
     }
 }

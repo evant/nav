@@ -1,5 +1,7 @@
 package me.tatarka.nav
 
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 
@@ -21,13 +23,22 @@ inline fun <T : Any> backStackOf(startingPage: T, vararg pages: T): BackStack<T>
     })
 
 /**
+ * Creates a [BackStack] with the given pages.
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T : Any> backStackOf(pages: List<T>): BackStack<T> {
+    require(pages.isNotEmpty()) { "pages must not be empty" }
+    return BackStack(SnapshotStateList<T>().apply { addAll(pages) })
+}
+
+/**
  * An opinionated back stack implementation. This guarantees you always have a root page in your
  * stack and you can only push new items onto the stack and pop ones off.
  */
 @Suppress("NON_PUBLIC_PRIMARY_CONSTRUCTOR_OF_INLINE_CLASS")
 inline class BackStack<T : Any> @PublishedApi internal constructor(
-    private val _pages: MutableList<T>
-) : NavigationStack<T> {
+    private val _pages: SnapshotStateList<T>
+) : NavigationStack<T>, Parcelable {
 
     /**
      * All the pages in the back stack.
@@ -43,6 +54,13 @@ inline class BackStack<T : Any> @PublishedApi internal constructor(
      * The current page. This is at the top page on the stack and is meant to be displayed.
      */
     val current: T get() = _pages.last()
+
+    fun set(pages: List<T>) {
+        require(pages.isNotEmpty()) { "pages must not be empty" }
+        require(pages.first() == root) { "cannot change root page" }
+        _pages.clear()
+        _pages.addAll(pages)
+    }
 
     /**
      * Navigate to the given page pushing it onto the stack.
@@ -121,5 +139,31 @@ inline class BackStack<T : Any> @PublishedApi internal constructor(
 
     override fun toString(): String {
         return "BackStack{${pages.joinToString(", ")}}"
+    }
+
+    @PublishedApi
+    internal constructor(parcel: Parcel) : this(
+        SnapshotStateList<T>().apply {
+            parcel.readList(this, this::class.java.classLoader)
+        }
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeList(_pages)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object {
+        @JvmStatic
+        val CREATOR = object : Parcelable.Creator<BackStack<*>> {
+            override fun createFromParcel(parcel: Parcel): BackStack<*> {
+                return BackStack<Any>(parcel)
+            }
+
+            override fun newArray(size: Int): Array<BackStack<*>?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }

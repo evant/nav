@@ -19,7 +19,7 @@ sealed class Page : Parcelable {
    data class Detail(id: Int): Page()
 }
 
-var pages by savedInstanceState<Page> { listOf(Page.List) }
+var pages by savedInstanceState { listOf<Page>(Page.List) }
 
 Navigator(pages = pages, onPopPage = { pages = pages.dropLast(1) }) {
    when (val page = pages.last()) {
@@ -34,7 +34,7 @@ opinionated way to manipulate the backstack you can use the `BackStack` class. I
 starting destination and you can only push and pop the stack.
 
 ```kotlin
-val backStack by rememberBackStack<Page> { backStackOf(Page.List) } 
+val backStack by savedInstanceState { backStackOf<Page>(Page.List) } 
 
 Navigator(backStack) {
    when (val page = backStack.current) {
@@ -65,8 +65,32 @@ sealed class Page : Parcelable {
    @Route("/detail/{id}")
    data class Detail(id: Int): Page()
 }
+...
 
-val backStack by rememberBackStack<Page>(deepLink) {
-    deepLink.toBackStack(Page.List)
+val backStack = backStackOf(parseRoute(deepLink))
+```
+
+A helper is also provided to route your deep link from your activity into your compose tree. It is
+recommend you set `android:launchMode="singleTop"` in your manifest and override `onNewIntent()`.
+This ensures your Activity isn't recreated when receiving an intent. 
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    
+    private val deepLinkHandler = DeepLinkHandler(this)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            var backStack by savedInstanceState { backStackOf<Page>(Page.Home) }
+            deepLinkHandler.OnDeepLink { link -> backStack = backStackOf(parseRoute(link)) }
+            App(backStack)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        deepLinkHandler.onNewIntent(intent)
+    }
 }
 ```

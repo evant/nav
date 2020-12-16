@@ -7,6 +7,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import kotlin.math.log
 
 private val ROUTE = "me.tatarka.nav.router.Route"
 private val ROUTE_MATCHER = ClassName("me.tatarka.nav.router", "RouteMatcher")
@@ -39,12 +40,14 @@ class RouteProcessor : SymbolProcessor {
                 logger.error("Route must be a sealed class variant", routeClass)
                 continue
             }
+            val route = routeClass.findAnnotations(ROUTE)
             routesMap.getOrPut(parent) { mutableListOf() }
                 .add(
                     Route(
-                        routeClass,
-                        routeClass.findAnnotations(ROUTE)
-                            .map { it.arguments.first().value as String })
+                        declaration = routeClass,
+                        paths = route.map { it.arguments.first().value as String },
+                        isRoot = route.any { it.arguments[1].value as Boolean? == true }
+                    )
                 )
         }
 
@@ -93,21 +96,30 @@ class RouteProcessor : SymbolProcessor {
         return FunSpec.builder("parseRoute")
             .receiver(KCLASS.parameterizedBy(parentClassName))
             .addParameter("deepLink", URI)
-            .returns(parentClassName.copy(nullable = true))
+            .returns(LIST.parameterizedBy(parentClassName))
             .addCode(CodeBlock.Builder().apply {
                 addStatement(
                     "var results: %T",
                     MAP.parameterizedBy(STRING, STRING).copy(nullable = true)
                 )
                 var i = 0
+                val rootRoute = routeClasses.find { it.isRoot }
                 for (route in routeClasses) {
                     for (path in route.paths) {
                         addStatement("results = %N[%L].match(deepLink)", routes, i)
                         beginControlFlow("if (results != null)")
+                        addStatement("return listOf(")
+                        if (rootRoute != null && !route.isRoot) {
+                            if (rootRoute.declaration.classKind == ClassKind.OBJECT) {
+                                addStatement("%T,", rootRoute.declaration.toClassName())
+                            } else {
+                                addStatement("%T(),", rootRoute.declaration.toClassName())
+                            }
+                        }
                         if (route.declaration.classKind == ClassKind.OBJECT) {
-                            addStatement("return %T", route.declaration.toClassName())
+                            addStatement("%T", route.declaration.toClassName())
                         } else {
-                            addStatement("return %T(", route.declaration.toClassName())
+                            addStatement("%T(", route.declaration.toClassName())
                             for (param in route.declaration.primaryConstructor!!.parameters) {
                                 val name = param.name!!.asString()
                                 val paramType = param.type!!.resolve()
@@ -119,12 +131,21 @@ class RouteProcessor : SymbolProcessor {
                             }
                             addStatement(")")
                         }
+                        addStatement(")")
                         endControlFlow()
                         i += 1
                     }
                 }
 
-                add("return null")
+                if (rootRoute != null) {
+                    if (rootRoute.declaration.classKind == ClassKind.OBJECT) {
+                        add("return listOf(%T)", rootRoute.declaration.toClassName())
+                    } else {
+                        add("return listOf(%T())", rootRoute.declaration.toClassName())
+                    }
+                } else {
+                    add("return emptyList()")
+                }
             }.build())
             .build()
     }
@@ -156,7 +177,8 @@ class RouteProcessor : SymbolProcessor {
 
 private class Route(
     val declaration: KSClassDeclaration,
-    val paths: List<String>
+    val paths: List<String>,
+    val isRoot: Boolean
 )
 
 private fun KSClassDeclaration.findSealedParent(): KSDeclaration? {

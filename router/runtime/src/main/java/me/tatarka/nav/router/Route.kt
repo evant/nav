@@ -11,7 +11,7 @@ package me.tatarka.nav.router
  *
  * ```
  * sealed class Routes {
- *     @Route("")
+ *     @Route("", root = true)
  *     object Home: Routes()
  *
  *     @Route("/detail/{id}")
@@ -26,5 +26,5 @@ package me.tatarka.nav.router
 @Repeatable
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
-annotation class Route(val value: String)
+annotation class Route(val value: String, val root: Boolean = false)
 

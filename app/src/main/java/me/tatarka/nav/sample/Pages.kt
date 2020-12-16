@@ -7,10 +7,11 @@ import me.tatarka.nav.router.Route
 sealed class Page : Parcelable {
     @Parcelize
     @Route("/search")
+    @Route("/search/.*")
     object Search : Page()
 
     @Parcelize
-    @Route("")
+    @Route("", root = true)
     @Route("/detail/.*")
     object Home : Page()
 
@@ -21,7 +22,7 @@ sealed class Page : Parcelable {
 
 sealed class HomePage : Parcelable {
     @Parcelize
-    @Route("")
+    @Route("", root = true)
     object List : HomePage()
 
     @Parcelize
@@ -31,7 +32,7 @@ sealed class HomePage : Parcelable {
 
 sealed class SearchPage : Parcelable {
     @Parcelize
-    @Route("/search")
+    @Route("/search", root = true)
     object Main : SearchPage()
 
     @Parcelize
