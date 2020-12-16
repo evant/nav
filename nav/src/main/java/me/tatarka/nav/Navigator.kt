@@ -39,16 +39,17 @@ fun <T : Any> Navigator(
     content: @Composable () -> Unit
 ) {
     require(pages.isNotEmpty()) { "pages must not be empty" }
+    val pages = pages.toList() // ensure the list is immutable
 
-    val backstack = remember { mutableStateOf(pages) }
+    var backstack by remember { mutableStateOf(pages) }
     val restorableStateHolder = rememberRestorableStateHolder<T>()
 
     val currentPage = pages.last()
 
     onCommit(pages) {
-        if (pages != backstack.value) {
-            val oldPages = backstack.value
-            backstack.value = pages
+        if (pages != backstack) {
+            val oldPages = backstack
+            backstack = pages
             for (oldPage in oldPages) {
                 if (oldPage !in pages) {
                     restorableStateHolder.removeState(oldPage)
