@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-parcelize'
-    id 'symbol-processing'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -26,6 +26,10 @@ android {
     }
     buildFeatures {
         compose true
+    }
+    composeOptions {
+        kotlinCompilerVersion = kotlin_version
+        kotlinCompilerExtensionVersion = compose_version
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

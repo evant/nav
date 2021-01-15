@@ -1,6 +1,5 @@
 package me.tatarka.nav.sample
 
-import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.runtime.setValue
@@ -19,7 +17,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import me.tatarka.nav.*
-import me.tatarka.nav.router.parseRoute
 
 data class NavItem(
     @DrawableRes
@@ -43,13 +40,6 @@ class AppBackStack(
 
 @Composable
 fun App(backStack: AppBackStack) {
-    // The overall back stack
-//    val backStack = rememberBackStack(deepLink) { backStackOf<Page>(parseRoute(deepLink)) }
-//    // Page-specific back stacks
-//    val searchBackStack =
-//        rememberBackStack(deepLink) { backStackOf<SearchPage>(parseRoute(deepLink)) }
-//    val homeBackStack =
-//        rememberBackStack(deepLink) { backStackOf<HomePage>(parseRoute(deepLink)) }
     val pageBackStacks = mapOf(Page.Search to backStack.search, Page.Home to backStack.home)
 
     Scaffold(
@@ -86,7 +76,7 @@ fun App(backStack: AppBackStack) {
                 }
             }
         }) { padding ->
-        Navigator(backStack.primary) {
+//        Navigator(backStack.primary) {
             Box(Modifier.padding(padding)) {
                 when (backStack.primary.current) {
                     Page.Search -> {
@@ -100,7 +90,7 @@ fun App(backStack: AppBackStack) {
                     }
                 }
             }
-        }
+//        }
     }
 }
 
@@ -109,7 +99,10 @@ fun Search(backStack: BackStack<SearchPage>) {
     Navigator(backStack) {
         when (val page = backStack.current) {
             SearchPage.Main -> {
-                var query by savedInstanceState { "" }
+                var query by savedInstanceState {
+                    println("new query state")
+                    ""
+                }
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = query,

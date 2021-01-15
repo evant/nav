@@ -1,0 +1,81 @@
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+
+def isAndroid = plugins.hasPlugin('com.android.library')
+
+group = 'me.tatarka.compose.nav'
+version = '0.1-SNAPSHOT'
+
+if (isAndroid) {
+    task javadoc(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+    }
+}
+
+task javadocsJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    if (isAndroid) {
+        from android.sourceSets.main.java.srcDirs
+    } else {
+        from sourceSets.main.allSource
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            lib(MavenPublication) {
+                if (isAndroid) {
+                    from components.release
+                } else {
+                    from components.java
+                }
+                artifact sourcesJar
+                artifact javadocsJar
+
+                pom {
+                    name = 'nav'
+                    description = 'A simple declarative Android compose navigator'
+                    url = 'https://github.com/evant/nav'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'evant'
+                            name = 'Evan Tatarka'
+                        }
+                    }
+                    scm {
+                        connection = 'https://github.com/evant/nav.git'
+                        developerConnection = 'https://github.com/evant/nav.git'
+                        url = 'https://github.com/evant/nav'
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                credentials {
+                    username project.findProperty('sonatype.username')
+                    password project.findProperty('sonatype.password')
+                }
+            }
+        }
+    }
+
+    signing {
+        required { project.findProperty('signing.keyId') != null }
+        sign publishing.publications.lib
+    }
+}

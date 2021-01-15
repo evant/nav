@@ -52,6 +52,7 @@ fun <T : Any> Navigator(
             backstack = pages
             for (oldPage in oldPages) {
                 if (oldPage !in pages) {
+                    println("remove page: $oldPage")
                     restorableStateHolder.removeState(oldPage)
                 }
             }
@@ -63,6 +64,7 @@ fun <T : Any> Navigator(
     }
 
     restorableStateHolder.RestorableStateProvider(key = currentPage) {
+        println("render: $currentPage")
         content()
     }
 }

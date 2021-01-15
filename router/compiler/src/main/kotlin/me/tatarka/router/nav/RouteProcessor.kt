@@ -1,9 +1,6 @@
 package me.tatarka.router.nav
 
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -63,7 +60,7 @@ class RouteProcessor : SymbolProcessor {
                 .addProperty(routes)
                 .addFunction(parseRoute)
                 .build()
-            file.writeTo(codeGenerator)
+            writeTo(file, parent.containingFile!!, codeGenerator)
         }
     }
 
@@ -122,7 +119,7 @@ class RouteProcessor : SymbolProcessor {
                             addStatement("%T(", route.declaration.toClassName())
                             for (param in route.declaration.primaryConstructor!!.parameters) {
                                 val name = param.name!!.asString()
-                                val paramType = param.type!!.resolve()
+                                val paramType = param.type.resolve()
                                 addStatement(
                                     "%L = results${parseValue(resolver, paramType)}",
                                     name,
@@ -202,8 +199,12 @@ private fun KSAnnotated.findAnnotations(name: String): List<KSAnnotation> = anno
     it.annotationType.resolve().declaration.qualifiedName!!.asString() == name
 }
 
-private fun FileSpec.writeTo(codeGenerator: CodeGenerator) {
-    codeGenerator.createNewFile(packageName, name).bufferedWriter().use {
-        writeTo(it)
+private fun writeTo(fileSpec: FileSpec, file: KSFile, codeGenerator: CodeGenerator) {
+    codeGenerator.createNewFile(
+        Dependencies(true, file),
+        fileSpec.packageName,
+        fileSpec.name
+    ).bufferedWriter().use {
+        fileSpec.writeTo(it)
     }
 }
