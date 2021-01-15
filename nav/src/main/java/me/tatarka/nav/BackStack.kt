@@ -1,5 +1,6 @@
 package me.tatarka.nav
 
+import android.annotation.SuppressLint
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.compose.runtime.mutableStateListOf
@@ -35,6 +36,7 @@ inline fun <T : Any> backStackOf(pages: List<T>): BackStack<T> {
  * An opinionated back stack implementation. This guarantees you always have a root page in your
  * stack and you can only push new items onto the stack and pop ones off.
  */
+@SuppressLint("ParcelCreator")
 @Suppress("NON_PUBLIC_PRIMARY_CONSTRUCTOR_OF_INLINE_CLASS")
 inline class BackStack<T : Any> @PublishedApi internal constructor(
     private val _pages: SnapshotStateList<T>
