@@ -1,4 +1,6 @@
 # Nav
+[![CircleCI](https://circleci.com/gh/evant/nav.svg?style=svg&circle-token=8792fa19911be92d6a1d66dd45ece3bf6712f778)](https://circleci.com/gh/evant/nav)
+[![Sonatype Snapshot](https://img.shields.io/nexus/s/https/oss.sonatype.org/me.tatarka.compose.nav/nav.svg)](https://oss.sonatype.org/content/repositories/snapshots/me/tatarka/compose/nav/)
 
 A simple declarative Android compose navigator
 
