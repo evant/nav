@@ -6,9 +6,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.compose.runtime.*
-import androidx.compose.runtime.savedinstancestate.ExperimentalRestorableStateHolder
-import androidx.compose.runtime.savedinstancestate.rememberRestorableStateHolder
-import androidx.compose.ui.platform.AmbientContext
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 @Suppress("NOTHING_TO_INLINE")
@@ -31,7 +30,6 @@ inline fun <T : Any> Navigator(
  * the stack.
  * @param content The page content. This will normally depend on the top page in the stack.
  */
-@OptIn(ExperimentalRestorableStateHolder::class)
 @Composable
 fun <T : Any> Navigator(
     pages: List<T>,
@@ -42,19 +40,16 @@ fun <T : Any> Navigator(
     val pages = pages.toList() // ensure the list is immutable
 
     var backstack by remember { mutableStateOf(pages) }
-    val restorableStateHolder = rememberRestorableStateHolder<T>()
+    val restorableStateHolder = rememberSaveableStateHolder()
 
     val currentPage = pages.last()
 
-    onCommit(pages) {
-        if (pages != backstack) {
-            val oldPages = backstack
-            backstack = pages
-            for (oldPage in oldPages) {
-                if (oldPage !in pages) {
-                    println("remove page: $oldPage")
-                    restorableStateHolder.removeState(oldPage)
-                }
+    if (pages != backstack) {
+        val oldPages = backstack
+        backstack = pages
+        for (oldPage in oldPages) {
+            if (oldPage !in pages) {
+                restorableStateHolder.removeState(oldPage)
             }
         }
     }
@@ -63,7 +58,7 @@ fun <T : Any> Navigator(
         onPopPage(currentPage)
     }
 
-    restorableStateHolder.RestorableStateProvider(key = currentPage) {
+    restorableStateHolder.SaveableStateProvider(key = currentPage) {
         println("render: $currentPage")
         content()
     }
@@ -74,7 +69,7 @@ fun <T : Any> Navigator(
  */
 @Composable
 private fun OnBackPressed(vararg inputs: Any?, enabled: Boolean = true, onBackPressed: () -> Unit) {
-    val onBackPressedDispatcher = AmbientContext.current.onBackPressedDispatcher
+    val onBackPressedDispatcher = LocalContext.current.onBackPressedDispatcher
     val callback = remember(*inputs) {
         object : OnBackPressedCallback(enabled) {
             override fun handleOnBackPressed() {

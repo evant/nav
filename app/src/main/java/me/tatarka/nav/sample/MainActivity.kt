@@ -2,10 +2,10 @@ package me.tatarka.nav.sample
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
-import androidx.compose.ui.platform.setContent
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.saveable.rememberSaveable
 import me.tatarka.nav.backStackOf
 import me.tatarka.nav.router.DeepLinkHandler
 import me.tatarka.nav.router.parseRoute
@@ -18,9 +18,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var primary by savedInstanceState { backStackOf<Page>(Page.Home) }
-            var search by savedInstanceState { backStackOf<SearchPage>(SearchPage.Main) }
-            var home by savedInstanceState { backStackOf<HomePage>(HomePage.List) }
+            var primary by rememberSaveable { mutableStateOf(backStackOf<Page>(Page.Home)) }
+            var search by rememberSaveable { mutableStateOf(backStackOf<SearchPage>(SearchPage.Main)) }
+            var home by rememberSaveable { mutableStateOf(backStackOf<HomePage>(HomePage.List)) }
 
             deepLinkHandler.OnDeepLink { link ->
                 primary = backStackOf(parseRoute(link))

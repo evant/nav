@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlin.math.log
+import kotlin.reflect.KAnnotatedElement
 
 private val ROUTE = "me.tatarka.nav.router.Route"
 private val ROUTE_MATCHER = ClassName("me.tatarka.nav.router", "RouteMatcher")
@@ -27,7 +28,7 @@ class RouteProcessor : SymbolProcessor {
         this.logger = logger
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val routesMap = mutableMapOf<KSDeclaration, MutableList<Route>>()
 
         for (routeClass in resolver.getSymbolsWithAnnotation(ROUTE)) {
@@ -62,6 +63,8 @@ class RouteProcessor : SymbolProcessor {
                 .build()
             writeTo(file, parent.containingFile!!, codeGenerator)
         }
+
+        return emptyList()
     }
 
     private fun generateRoutes(

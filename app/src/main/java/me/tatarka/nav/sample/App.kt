@@ -4,16 +4,15 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import me.tatarka.nav.*
@@ -59,7 +58,7 @@ fun App(backStack: AppBackStack) {
             BottomNavigation {
                 for (item in BOTTOM_ITEMS) {
                     BottomNavigationItem(
-                        icon = { Icon(imageVector = vectorResource(item.icon)) },
+                        icon = { Icon(painterResource(item.icon), contentDescription = null) },
                         label = { Text(stringResource(item.title)) },
                         selected = item.page == backStack.primary.current,
                         onClick = {
@@ -99,20 +98,19 @@ fun Search(backStack: BackStack<SearchPage>) {
     Navigator(backStack) {
         when (val page = backStack.current) {
             SearchPage.Main -> {
-                var query by savedInstanceState {
+                var query by rememberSaveable {
                     println("new query state")
-                    ""
+                    mutableStateOf("")
                 }
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = query,
                     onValueChange = { query = it },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    onImeActionPerformed = { action, _ ->
-                        if (action == ImeAction.Search) {
-                            backStack.navigate(SearchPage.Results(query), singleTop = true)
-                        }
-                    })
+                    keyboardActions = KeyboardActions {
+                        backStack.navigate(SearchPage.Results(query), singleTop = true)
+                    }
+                )
             }
             is SearchPage.Results -> {
                 Box(Modifier.fillMaxSize()) {
@@ -127,6 +125,7 @@ fun Search(backStack: BackStack<SearchPage>) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Home(backStack: BackStack<HomePage>) {
     Navigator(backStack) {

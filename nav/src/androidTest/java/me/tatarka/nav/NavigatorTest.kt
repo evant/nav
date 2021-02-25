@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -38,7 +39,7 @@ class NavigatorTest {
             ) {
                 when (pages.value.last()) {
                     Page.ONE -> {
-                        var count by savedInstanceState { 0 }
+                        var count by rememberSaveable { mutableStateOf(0) }
                         Column {
                             BasicText(
                                 modifier = Modifier.clickable(onClick = { count++ }),
@@ -78,7 +79,7 @@ class NavigatorTest {
                         BasicText(text = "Page 1")
                     }
                     Page.TWO -> {
-                        var count by savedInstanceState { 0 }
+                        var count by rememberSaveable { mutableStateOf(0) }
                         Column {
                             BasicText(
                                 modifier = Modifier.clickable(onClick = { count++ }),

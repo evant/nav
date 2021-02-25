@@ -21,9 +21,9 @@ sealed class Page : Parcelable {
    data class Detail(id: Int): Page()
 }
 
-var pages by savedInstanceState { listOf<Page>(Page.List) }
+val pages = rememberSaveable { mutableStateListOf<Page>(Page.List) }
 
-Navigator(pages = pages, onPopPage = { pages = pages.dropLast(1) }) {
+Navigator(pages = pages, onPopPage = { pages.removeLast() }) {
    when (val page = pages.last()) {
        is List -> ListPage()
        is Detail -> DetailPage(id = page.id)
@@ -36,7 +36,7 @@ opinionated way to manipulate the backstack you can use the `BackStack` class. I
 starting destination and you can only push and pop the stack.
 
 ```kotlin
-val backStack by savedInstanceState { backStackOf<Page>(Page.List) } 
+val backStack = rememberSaveable { backStackOf<Page>(Page.List) } 
 
 Navigator(backStack) {
    when (val page = backStack.current) {
@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var backStack by savedInstanceState { backStackOf<Page>(Page.Home) }
+            var backStack by rememberSaveableOf { mutableStateOf(backStackOf<Page>(Page.Home)) }
             deepLinkHandler.OnDeepLink { link -> backStack = backStackOf(parseRoute(link)) }
             App(backStack)
         }
