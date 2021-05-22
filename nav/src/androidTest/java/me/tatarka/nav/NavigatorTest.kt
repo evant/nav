@@ -3,11 +3,8 @@ package me.tatarka.nav
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertTextEquals
@@ -36,8 +33,8 @@ class NavigatorTest {
             Navigator(
                 pages = pages.collectAsState().value,
                 onPopPage = { pages.value = pages.value.dropLast(1) }
-            ) {
-                when (pages.value.last()) {
+            ) { page ->
+                when (page) {
                     Page.ONE -> {
                         var count by rememberSaveable { mutableStateOf(0) }
                         Column {
@@ -61,6 +58,7 @@ class NavigatorTest {
         pages.value = listOf(Page.ONE, Page.TWO)
         composeTestRule.waitForIdle()
         pages.value = listOf(Page.ONE)
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("count").assertTextEquals("1")
     }
@@ -73,8 +71,8 @@ class NavigatorTest {
             Navigator(
                 pages = pages.collectAsState().value,
                 onPopPage = { pages.value = pages.value.dropLast(1) }
-            ) {
-                when (pages.value.last()) {
+            ) { page ->
+                when (page) {
                     Page.ONE -> {
                         BasicText(text = "Page 1")
                     }
