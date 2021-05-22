@@ -23,8 +23,8 @@ sealed class Page : Parcelable {
 
 val pages = rememberSaveable { mutableStateListOf<Page>(Page.List) }
 
-Navigator(pages = pages, onPopPage = { pages.removeLast() }) {
-   when (val page = pages.last()) {
+Navigator(pages = pages, onPopPage = { pages.removeLast() }) { page ->
+   when (page) {
        is List -> ListPage()
        is Detail -> DetailPage(id = page.id)
    }
@@ -38,8 +38,8 @@ starting destination and you can only push and pop the stack.
 ```kotlin
 val backStack = rememberSaveable { backStackOf<Page>(Page.List) } 
 
-Navigator(backStack) {
-   when (val page = backStack.current) {
+Navigator(backStack) { page ->
+   when (page) {
        is List -> ListPage()
        is Detail -> DetailPage(id = page.id)
    }
