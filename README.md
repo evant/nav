@@ -47,7 +47,9 @@ Navigator(backStack) { page ->
 
 ...
 
-backStack.navigate(page = Page.Detail(id = 1), popUpTo = { it is Page.List }, singleTop = true)
+backStack.navigate(page = Page.Detail(id = 1)) {
+  popUpTo(singleTop = true) { it is Page.List }
+}
 backStack.pop()
 ```
 
