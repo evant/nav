@@ -18,17 +18,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var primary by rememberSaveable { mutableStateOf(backStackOf<Page>(Page.Home)) }
-            var search by rememberSaveable { mutableStateOf(backStackOf<SearchPage>(SearchPage.Main)) }
-            var home by rememberSaveable { mutableStateOf(backStackOf<HomePage>(HomePage.List)) }
+            var backStack by rememberSaveable { mutableStateOf(backStackOf<Page>(Page.Home)) }
 
             deepLinkHandler.OnDeepLink { link ->
-                primary = backStackOf(parseRoute(link))
-                search = backStackOf(parseRoute(link))
-                home = backStackOf(parseRoute(link))
+                backStack = backStackOf(parseRoute(link))
             }
 
-            App(AppBackStack(primary, search, home))
+            App(backStack)
         }
     }
 

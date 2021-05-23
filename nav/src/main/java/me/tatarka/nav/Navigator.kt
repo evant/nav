@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleOwner
@@ -22,9 +24,16 @@ import androidx.lifecycle.LifecycleRegistry
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T : Any> Navigator(
     stack: NavigationStack<T>,
+    modifier: Modifier = Modifier,
     noinline content: @Composable NavigatorScope<T>.(page: T) -> Unit
 ) {
-    Navigator(pages = stack.pages, onPopPage = { stack.pop() }, content = content)
+    Navigator(
+        pages = stack.pages,
+        onPopPage = { stack.pop() },
+        modifier = modifier,
+        shouldSaveState = stack::shouldSaveState,
+        content = content
+    )
 }
 
 /**
@@ -41,6 +50,8 @@ inline fun <T : Any> Navigator(
  * provide the list of previous pages to calculate this. The default implementation will show the
  * target page on top if it's not in the previous pages (push) and show the initial page on top
  * otherwise (pop).
+ * @param shouldSaveState Determine if old pages no longer in [pages] should keep their saved state.
+ * By default this is always returns false.
  * @param content The page content. Use the provided page to determine which page to show. During a
  * transition this will be called twice with the initial and target pages to animate them.
  */
@@ -48,17 +59,23 @@ inline fun <T : Any> Navigator(
 fun <T : Any> Navigator(
     pages: List<T>,
     onPopPage: (page: T) -> Unit,
+    modifier: Modifier = Modifier,
+    shouldSaveState: (page: T) -> Boolean = { false },
     ordering: (previousPages: List<T>) -> TransitionOrdering = { defaultOrdering(it, pages) },
     content: @Composable NavigatorScope<T>.(page: T) -> Unit
 ) {
-    val state = rememberNavigatorState(pages = pages, calculateOrdering = ordering)
+    val state = rememberNavigatorState(
+        pages = pages,
+        shouldSaveState = shouldSaveState,
+        calculateOrdering = ordering
+    )
     val shownPages = calculatePagesToShow(state.transition, state.transitionOrdering)
 
     OnBackPressed(state.transition.targetState, enabled = state.onBackPressedEnabled) {
         onPopPage(state.transition.targetState)
     }
 
-    Box {
+    Box(modifier) {
         for (page in shownPages) {
             key(page) {
                 val scope = NavigatorScopeImpl(state.transition)
@@ -146,6 +163,7 @@ enum class TransitionOrdering {
 @Composable
 private fun <T : Any> rememberNavigatorState(
     pages: List<T>,
+    shouldSaveState: (page: T) -> Boolean,
     calculateOrdering: (previousPages: List<T>) -> TransitionOrdering
 ): NavigatorState<T> {
     require(pages.isNotEmpty()) { "pages must not be empty" }
@@ -159,9 +177,9 @@ private fun <T : Any> rememberNavigatorState(
     val ordering = if (pages != backstack) {
         val previousPages = backstack
         backstack = pages
-        for (oldPage in previousPages) {
-            if (oldPage !in pages) {
-                saveableStateHolder.removeState(oldPage)
+        for (previousPage in previousPages) {
+            if (previousPage !in pages && !shouldSaveState(previousPage)) {
+                saveableStateHolder.removeState(previousPage)
             }
         }
         calculateOrdering(previousPages)
@@ -212,4 +230,6 @@ interface NavigationStack<T> {
     val pages: List<T>
 
     fun pop(): Boolean
+
+    fun shouldSaveState(page: T): Boolean
 }
