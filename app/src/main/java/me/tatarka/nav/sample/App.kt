@@ -3,8 +3,8 @@ package me.tatarka.nav.sample
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,7 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -34,23 +34,17 @@ val BOTTOM_ITEMS = listOf(
     NavItem(icon = R.drawable.ic_settings, title = R.string.settings, page = Page.Settings)
 )
 
-class AppBackStack(
-    val primary: BackStack<Page>,
-    val search: BackStack<SearchPage>,
-    val home: BackStack<HomePage>,
-)
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun App(backStack: AppBackStack) {
-    val pageBackStacks = mapOf(Page.Search to backStack.search, Page.Home to backStack.home)
+fun App(backStack: BackStack<Page>) {
 
     Scaffold(
         topBar = {
             TopAppBar(title = {
                 Text(
-                    text = when (backStack.primary.current) {
-                        Page.Search -> stringResource(R.string.search)
-                        Page.Home -> stringResource(R.string.app_name)
+                    text = when (backStack.current) {
+                        Page.Search, is Page.SearchResults -> stringResource(R.string.search)
+                        Page.Home, is Page.Detail -> stringResource(R.string.app_name)
                         Page.Settings -> stringResource(R.string.settings)
                     },
                     style = MaterialTheme.typography.h4
@@ -59,35 +53,54 @@ fun App(backStack: AppBackStack) {
         },
         bottomBar = {
             BottomNavigation {
+                val currentBottomPage =
+                    backStack.pages.findLast { page -> BOTTOM_ITEMS.any { page == it.page } }
+
                 for (item in BOTTOM_ITEMS) {
                     BottomNavigationItem(
                         icon = { Icon(painterResource(item.icon), contentDescription = null) },
                         label = { Text(stringResource(item.title)) },
-                        selected = item.page == backStack.primary.current,
+                        selected = item.page == currentBottomPage,
                         onClick = {
-                            if (item.page == backStack.primary.current) {
-                                pageBackStacks[item.page]?.popToRoot()
+                            if (item.page == backStack.current) {
+                                //TODO
                             } else {
-                                backStack.primary.navigate(
-                                    page = item.page,
-                                    popUpTo = { it is Page.Home },
-                                    singleTop = true,
-                                )
+                                backStack.navigate(item.page) {
+                                    popUpTo(saveState = currentBottomPage != item.page) {
+                                        it == backStack.root
+                                    }
+                                    singleTop = true
+                                    restoreState = true
+                                }
                             }
                         })
                 }
             }
         }) { padding ->
-        Navigator(backStack.primary) { page ->
-            Box(Modifier.padding(padding)) {
+        Navigator(backStack, Modifier.padding(padding)) { page ->
+            pageTransition.AnimatedVisibility(
+                visible = { it == page },
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
                 when (page) {
-                    Page.Search -> {
-                        Search(backStack.search)
+                    is Page.Search -> {
+                        Search(onSearch = { query ->
+                            backStack.navigate(Page.SearchResults(query)) { singleTop = true }
+                        })
                     }
-                    Page.Home -> {
-                        Home(backStack.home)
+                    is Page.SearchResults -> {
+                        SearchResults(text = page.query)
                     }
-                    Page.Settings -> {
+                    is Page.Home -> {
+                        Home(onItemClick = { item ->
+                            backStack.navigate(Page.Detail(item))
+                        })
+                    }
+                    is Page.Detail -> {
+                        Detail(id = page.id)
+                    }
+                    is Page.Settings -> {
                         Settings()
                     }
                 }
@@ -97,30 +110,7 @@ fun App(backStack: AppBackStack) {
 }
 
 @Composable
-@OptIn(ExperimentalAnimationApi::class)
-fun Search(backStack: BackStack<SearchPage>) {
-    Navigator(backStack) { page ->
-        pageTransition.AnimatedVisibility(
-            visible = { page == it },
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            when (page) {
-                SearchPage.Main -> {
-                    SearchMain(onSearch = { query ->
-                        backStack.navigate(SearchPage.Results(query), singleTop = true)
-                    })
-                }
-                is SearchPage.Results -> {
-                    SearchResults(text = page.query)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SearchMain(onSearch: (query: String) -> Unit) {
+fun Search(onSearch: (query: String) -> Unit) {
     var query by rememberSaveable(key = "query") { mutableStateOf("") }
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -142,38 +132,9 @@ fun SearchResults(text: String) {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun Home(backStack: BackStack<HomePage>) {
-    Navigator(backStack) { page ->
-        when (page) {
-            HomePage.List -> {
-                pageTransition.AnimatedVisibility(
-                    visible = { it == page },
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    HomeList(onItemClick = { item ->
-                        backStack.navigate(HomePage.Detail(item))
-                    })
-                }
-            }
-            is HomePage.Detail -> {
-                pageTransition.AnimatedVisibility(
-                    visible = { it == page },
-                    enter = slideInHorizontally(),
-                    exit = slideOutHorizontally() + fadeOut(),
-                ) {
-                    HomeDetail(id = page.id)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 @OptIn(ExperimentalMaterialApi::class)
-fun HomeList(onItemClick: (item: Int) -> Unit) {
+fun Home(onItemClick: (item: Int) -> Unit) {
     Column {
         for (i in 0 until 10) {
             ListItem(Modifier.clickable(onClick = {
@@ -186,7 +147,7 @@ fun HomeList(onItemClick: (item: Int) -> Unit) {
 }
 
 @Composable
-fun HomeDetail(id: Int) {
+fun Detail(id: Int) {
     Box(Modifier.fillMaxSize()) {
         Text(
             modifier = Modifier.align(Alignment.Center),
