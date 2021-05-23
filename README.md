@@ -10,7 +10,7 @@ A simple declarative Android compose navigator
 
 The core component is a `Navigator` that takes a list of pages. The top page will be displayed to
 the user and pages in the backstack will have their state saved. You can use anything to represent
-your page state, but I recommend using a sealed class. You should also use `saveInstanceState()` to
+your page state, but I recommend using a sealed class. You should also use `rememberSaveable()` to
 ensure the pages are remembered through process death.
 
 ```kotlin
@@ -61,7 +61,7 @@ method to parse a path into the correct variant.
 ```kotlin
 sealed class Page : Parcelable {
    @Parcelize
-   @Route("")
+   @Route("", root = true)
    object List : Page()
    @Parcelize
    @Route("/detail/{id}")
