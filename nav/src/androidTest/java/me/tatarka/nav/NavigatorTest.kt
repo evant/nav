@@ -64,7 +64,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun moves_back_stack_state_on_pop() {
+    fun removes_back_stack_state_on_pop() {
         val pages = MutableStateFlow(listOf(Page.ONE, Page.TWO))
 
         composeTestRule.setContent {
