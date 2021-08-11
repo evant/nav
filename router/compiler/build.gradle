@@ -9,7 +9,7 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
 
-    testImplementation 'com.willowtreeapps.assertk:assertk-jvm:0.23'
+    testImplementation 'com.willowtreeapps.assertk:assertk-jvm:0.24'
 }
 
 sourceCompatibility = 1.8

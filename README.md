@@ -6,6 +6,18 @@ A simple declarative Android compose navigator
 
 ## Nav
 
+### Setup
+
+```kotlin
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation("me.tatarka.compose.nav:nav:0.1")
+}
+```
+
 ### Usage
 
 The core component is a `Navigator` that takes a list of pages. The top page will be displayed to
@@ -96,7 +108,7 @@ Navigator(backStack) { page ->
 }
 ```
 
-## Router
+## Router (Experimental)
 
 ### Usage
 
