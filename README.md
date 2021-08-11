@@ -53,6 +53,49 @@ backStack.navigate(page = Page.Detail(id = 1)) {
 backStack.pop()
 ```
 
+
+### Animation
+
+When transitioning between pages, you can use the `pageTransition` property to animate them. For
+example, a simple cross-fade can be done with:
+
+```kotlin
+Navigator(backStack) { page ->
+    pageTransition.AnimatedVisibility(
+        visible = { page == it },
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        ...
+    }
+}
+```
+
+If you want to customize the transition per page, you can inspect the `pageTranstion.currentState`
+and `pageTransition.targetState` values which will be the previous and current pages respectively.
+Check out the sample app to see a more fully-fledged version of this.
+
+```kotlin
+Navigator(backStack) { page ->
+    val current = pageTransition.currentState
+    val next = pageTransition.targetState
+
+    val (exitTransition, enterTransition) = when {
+        current is Page1 && next is Page2 -> slideOutLeft() to slideInRight()
+        current is Page2 && next is Page1 -> slideOutRight() to slideInLeft()
+        else -> fadeOut() to fadeIn()
+    }
+
+    pageTransition.AnimatedVisibility(
+        visible = { page == it },
+        enter = enterTransition,
+        exit = exitTransition,
+    ) {
+        ...
+    }
+}
+```
+
 ## Router
 
 ### Usage
