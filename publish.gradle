@@ -4,7 +4,7 @@ apply plugin: 'maven-publish'
 def isAndroid = plugins.hasPlugin('com.android.library')
 
 group = 'me.tatarka.compose.nav'
-version = '0.1-SNAPSHOT'
+version = '0.1'
 
 if (isAndroid) {
     task javadoc(type: Javadoc) {
