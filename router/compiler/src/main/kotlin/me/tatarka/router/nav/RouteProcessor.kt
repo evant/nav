@@ -13,20 +13,10 @@ private val ROUTE_MATCHER_LIST = LIST.parameterizedBy(ROUTE_MATCHER)
 private val KCLASS = ClassName("kotlin.reflect", "KClass")
 private val URI = ClassName("android.net", "Uri")
 
-class RouteProcessor : SymbolProcessor {
+class RouteProcessor(environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
-    private lateinit var codeGenerator: CodeGenerator
-    private lateinit var logger: KSPLogger
-
-    override fun init(
-        options: Map<String, String>,
-        kotlinVersion: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
-    ) {
-        this.codeGenerator = codeGenerator
-        this.logger = logger
-    }
+    private val codeGenerator: CodeGenerator = environment.codeGenerator
+    private val logger: KSPLogger = environment.logger
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val routesMap = mutableMapOf<KSDeclaration, MutableList<Route>>()
@@ -43,7 +33,7 @@ class RouteProcessor : SymbolProcessor {
                 .add(
                     Route(
                         declaration = routeClass,
-                        paths = route.map { it.arguments.first().value as String },
+                        paths = route.map { it.arguments.first().value as String }.toList(),
                         isRoot = route.any { it.arguments[1].value as Boolean? == true }
                     )
                 )
@@ -170,7 +160,11 @@ class RouteProcessor : SymbolProcessor {
         }
     }
 
-    override fun finish() {
+    companion object : SymbolProcessorProvider {
+        override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
+            RouteProcessor(
+                environment
+            )
     }
 }
 
@@ -198,7 +192,7 @@ private fun KSDeclaration.toClassName(): ClassName {
     return ClassName(if (packageName == "<root>") "" else packageName, shortName.split('.'))
 }
 
-private fun KSAnnotated.findAnnotations(name: String): List<KSAnnotation> = annotations.filter {
+private fun KSAnnotated.findAnnotations(name: String): Sequence<KSAnnotation> = annotations.filter {
     it.annotationType.resolve().declaration.qualifiedName!!.asString() == name
 }
 
