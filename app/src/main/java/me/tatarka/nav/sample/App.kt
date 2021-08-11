@@ -3,8 +3,8 @@ package me.tatarka.nav.sample
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -34,23 +33,11 @@ val BOTTOM_ITEMS = listOf(
     NavItem(icon = R.drawable.ic_settings, title = R.string.settings, page = Page.Settings)
 )
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun App(backStack: BackStack<Page>) {
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = {
-                Text(
-                    text = when (backStack.current) {
-                        Page.Search, is Page.SearchResults -> stringResource(R.string.search)
-                        Page.Home, is Page.Detail -> stringResource(R.string.app_name)
-                        Page.Settings -> stringResource(R.string.settings)
-                    },
-                    style = MaterialTheme.typography.h4
-                )
-            })
-        },
+        topBar = { TitleBar(backStack.current) },
         bottomBar = {
             BottomNavigation {
                 val currentBottomPage =
@@ -78,11 +65,7 @@ fun App(backStack: BackStack<Page>) {
             }
         }) { padding ->
         Navigator(backStack, Modifier.padding(padding)) { page ->
-            pageTransition.AnimatedVisibility(
-                visible = { it == page },
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
+            AnimateTransition(page = page) {
                 when (page) {
                     is Page.Search -> {
                         Search(onSearch = { query ->
@@ -107,6 +90,20 @@ fun App(backStack: BackStack<Page>) {
             }
         }
     }
+}
+
+@Composable
+fun TitleBar(currentPage: Page) {
+    TopAppBar(title = {
+        Text(
+            text = when (currentPage) {
+                Page.Search, is Page.SearchResults -> stringResource(R.string.search)
+                Page.Home, is Page.Detail -> stringResource(R.string.app_name)
+                Page.Settings -> stringResource(R.string.settings)
+            },
+            style = MaterialTheme.typography.h4
+        )
+    })
 }
 
 @Composable
